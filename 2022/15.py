@@ -24,8 +24,7 @@ for line in lines:
 
     sensor.append((numbers[0], numbers[1]))
     beacon.append((numbers[2], numbers[3]))
-
-row = 10
+sensor_distance = []
 clear = set()
 set_sensor = set(sensor.copy())
 set_beacon = set(beacon.copy())
@@ -38,47 +37,24 @@ for sensor_zip, beacon_zip in zip(sensor, beacon):
     delta_x = abs(s_x - b_x)
     delta_y = abs(s_y - b_y)
     manhattan_distance = delta_x + delta_y
+    sensor_distance.append((s_x, s_y, manhattan_distance))
 
-    for y in range(s_y-manhattan_distance, s_y+manhattan_distance):
-        if y < 0 and y > 20:
-            continue
-        for x in range(s_x-manhattan_distance, s_x+ manhattan_distance):
-            if x < 0 and x > 20:
+    for y in range(manhattan_distance+1):
+        x = manhattan_distance+1 - y
+        for dir_x, dir_y in [(-1,-1), (-1,1), (1,-1), (1,1)]:
+            new_x = s_x + x*dir_x
+            new_y = s_y + y*dir_y
+            if not(0<=x<=4000000 and 0<=y<=4000000):
                 continue
-            new_pos = (x,y)
-            if abs(new_pos[0] - s_x) + abs(new_pos[1] - s_y) <= manhattan_distance:
-                if new_pos not in set_sensor and new_pos not in set_beacon:
-                    clear.add(new_pos)
+            clear.add((new_x, new_y))
 
-                
+for x, y in list(clear):
+    for s_x, s_y, md in sensor_distance:
+        if abs(x-s_x) + abs(y-s_y) <= md:
+            clear.remove((x,y))
+            break
 
-count = len([x for x in clear if x[1] == row])
-print(count)
-count = count + len([x for x in set_sensor if x[1] == row])
-#print(count)
+res = [(x,y) for x,y in clear if 0<= x <= 4000000 and 0<= y <= 4000000][0]
+print(res[0] * 4000000 + res[1])
 
-possible_location = []
-def print_matrix(min_x, max_x, min_y, max_y):
-    for y in range(min_y, max_y+1):
-        for x in range(min_x, max_x+1):
-            current_tup = (x,y)
-            if current_tup in sensor:
-                print("S", end="")
-                pass
-            elif current_tup in beacon:
-                print("B", end="")
-                pass
-            elif current_tup in clear:
-                print("#", end="")
-                pass
-            else:
-                possible_location.append((x,y))
 
-                print(".", end="")
-        print(y)
-
-#print_matrix(-2, 26, -2, 26)
-print_matrix(0, 20, 0, 20)
-print(possible_location)
-x, y = possible_location[0]
-print(x*4000000 + y)
